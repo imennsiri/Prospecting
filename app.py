@@ -18,6 +18,31 @@ st.set_page_config(
 
 st.title("VEEP Prospect Intelligence Tool")
 st.caption("Automated research, scoring & outreach generation for French B2B prospects")
+import streamlit as st
+
+# ── Simple password gate ───────────────────────────────────────────────────
+def check_password():
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if st.session_state.authenticated:
+        return True
+
+    st.title("🎯 VEEP Prospect Tool")
+    st.markdown("#### Please enter the access password")
+    password = st.text_input("Password", type="password", placeholder="Enter password...")
+
+    if st.button("Login"):
+        if password == st.secrets["APP_PASSWORD"]:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Incorrect password.")
+
+    return False
+
+if not check_password():
+    st.stop()
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
