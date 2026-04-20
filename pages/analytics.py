@@ -1,8 +1,7 @@
 import streamlit as st
 from auth import check_auth
 
-if not check_auth():
-    st.stop()
+check_auth()
 
 import pandas as pd
 import numpy as np

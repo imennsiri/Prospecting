@@ -1,7 +1,6 @@
 import streamlit as st
 from auth import check_auth
-if not check_auth():
-    st.stop()
+check_auth()
 import pandas as pd
 from modules.news_fetcher import fetch_signals
 from modules.job_scraper import fetch_job_signals
