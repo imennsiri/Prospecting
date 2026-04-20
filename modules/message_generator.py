@@ -39,7 +39,6 @@ activement dans leur culture RH et l'expérience collaborateur.
 def generate_message(
     company_name:  str,
     news_signals:  list[dict],
-    job_signals:   list[dict],
     score:         int
 ) -> str:
     """
@@ -47,9 +46,9 @@ def generate_message(
     Falls back to a template if API key is not set.
     """
     if not GEMINI_API_KEY:
-        return _fallback_message(company_name, news_signals, job_signals)
+        return _fallback_message(company_name, news_signals)
 
-    context = _build_context(company_name, news_signals, job_signals, score)
+    context = _build_context(company_name, news_signals, score)
 
     prompt = f"""
 Tu es un business developer chez VALUE, une entreprise tunisienne de conseil en transformation digitale
@@ -89,10 +88,10 @@ Règles:
 
     except Exception as e:
         print(f"[message_generator] Gemini error: {e}")
-        return _fallback_message(company_name, news_signals, job_signals)
+        return _fallback_message(company_name, news_signals)
 
 
-def _build_context(company_name, news_signals, job_signals, score) -> str:
+def _build_context(company_name, news_signals, score) -> str:
     lines = []
 
     if news_signals:
@@ -100,23 +99,16 @@ def _build_context(company_name, news_signals, job_signals, score) -> str:
         for n in news_signals[:2]:
             lines.append(f"  - {n['title']}")
 
-    if job_signals:
-        lines.append("Postes RH/People ouverts:")
-        for j in job_signals[:2]:
-            lines.append(f"  - {j['title']}")
-
     return "\n".join(lines) if lines else "Aucun signal spécifique détecté."
 
 
-def _fallback_message(company_name, news_signals, job_signals) -> str:
+def _fallback_message(company_name, news_signals) -> str:
     """
     Simple template used when no API key is configured.
     """
     signal = ""
     if news_signals and news_signals[0]["relevance"] > 0:
         signal = f"J'ai vu que {company_name} était récemment dans l'actualité — {news_signals[0]['title'][:80]}. "
-    elif job_signals:
-        signal = f"Je vois que {company_name} recrute actuellement sur des profils RH/People. "
 
     return (
         f"Bonjour,\n\n"
