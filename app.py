@@ -54,10 +54,8 @@ with st.sidebar:
     st.caption("Scores are based on HR hiring signals, company growth news, and size fit for VEEP.")
 
 # ── Tab layout ────────────────────────────────────────────────────────────────
-tab_prospect, tab_results, tab_tracker, tab_analytics = st.tabs([
+tab_prospect, tab_analytics = st.tabs([
     "Prospect a company",
-    "All prospects",
-    "Results tracker",
     "Analytics"
 ])
 
