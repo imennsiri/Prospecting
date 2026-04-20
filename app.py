@@ -28,7 +28,7 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    st.title("🎯 VEEP Prospect Tool")
+    st.title("VEEP Prospect Tool")
     st.markdown("#### Please enter the access password")
     password = st.text_input("Password", type="password", placeholder="Enter password...")
 
@@ -90,16 +90,14 @@ with tab_prospect:
 
             with st.spinner(f"Fetching signals for {company}..."):
                 news_signals    = fetch_signals(company)
-                job_signals     = fetch_job_signals(company)
-                score, reasons  = score_prospect(company, news_signals, job_signals)
-                message         = generate_message(company, news_signals, job_signals, score) if auto_generate else ""
+                score, reasons  = score_prospect(company, news_signals)
+                message         = generate_message(company, news_signals, score) if auto_generate else ""
 
             results.append({
                 "company":      company,
                 "score":        score,
                 "reasons":      reasons,
                 "news":         news_signals,
-                "jobs":         job_signals,
                 "message":      message,
             })
 
@@ -128,13 +126,6 @@ with tab_prospect:
                             st.caption(f"📰 [{item['title']}]({item['url']})")
                     else:
                         st.caption("No recent news found.")
-
-                    st.markdown("**Hiring signals**")
-                    if r["jobs"]:
-                        for job in r["jobs"][:3]:
-                            st.caption(f"💼 {job['title']}")
-                    else:
-                        st.caption("No relevant job postings found.")
 
                 with col_b:
                     st.markdown("**Outreach message**")
