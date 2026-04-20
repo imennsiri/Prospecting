@@ -1,9 +1,15 @@
 import streamlit as st
+from auth import check_auth
+
+if not check_auth():
+    st.stop()
+
 import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from analytics_redesigned import *
+
 
 # ──────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
