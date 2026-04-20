@@ -26,7 +26,7 @@ with st.sidebar:
     st.sidebar.success("Navigate using the menu above")
     if st.sidebar.button("Logout"):
         st.session_state.authenticated = False
-    st.rerun()
+        st.rerun()
 
 st.title("VEEP Prospect Intelligence Tool")
 st.subheader("Research a new prospect")
