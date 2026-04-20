@@ -7,7 +7,6 @@ Designed to produce meaningful score distribution across real French companies.
 def score_prospect(
     company_name:  str,
     news_signals:  list[dict],
-    job_signals:   list[dict]
 ) -> tuple[int, list[str]]:
     """
     Returns (score: int, reasons: list[str])
@@ -15,7 +14,6 @@ def score_prospect(
 
     Scoring breakdown:
     - Base score:        10 pts (every company starts here)
-    - Job signals:       max 25 pts
     - News signals:      max 25 pts
     - Website signals:   max 25 pts
     - Coverage bonus:    max 15 pts
@@ -23,22 +21,6 @@ def score_prospect(
     """
     score   = 10  # base score — company exists and was found
     reasons = []
-
-    # ── Job signals (max 25 pts) ──────────────────────────────────────────────
-    strong_jobs = [j for j in job_signals if j["signal_strength"] == 2]
-    medium_jobs = [j for j in job_signals if j["signal_strength"] == 1]
-
-    if strong_jobs:
-        pts = min(len(strong_jobs) * 15, 25)
-        score += pts
-        titles = ", ".join(j["title"] for j in strong_jobs[:2])
-        reasons.append(f"Hiring for people/HR roles: {titles}")
-    elif medium_jobs:
-        pts = min(len(medium_jobs) * 8, 15)
-        score += pts
-        reasons.append(f"{len(medium_jobs)} adjacent HR-related posting(s) found")
-    else:
-        reasons.append("No HR/People job postings found")
 
     # ── News signals (max 25 pts) ─────────────────────────────────────────────
     high_relevance = [n for n in news_signals if n["relevance"] >= 2]
@@ -76,7 +58,6 @@ def score_prospect(
 
     # ── Coverage bonus (max 15 pts) ───────────────────────────────────────────
     signals_found = sum([
-        1 if job_signals  else 0,
         1 if news_signals else 0,
         1 if website_data.get("status") == "ok" else 0,
     ])
