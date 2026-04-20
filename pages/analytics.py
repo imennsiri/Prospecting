@@ -14,11 +14,7 @@ from analytics_redesigned import *
 # PAGE CONFIG
 # ──────────────────────────────────────────────────────────────────────────
 
-st.set_page_config(
-    page_title="VEEP Analytics Dashboard",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Removed st.set_page_config as it's not allowed in multi-page Streamlit apps
 
 st.title(" Prospecting Analytics Dashboard")
 
