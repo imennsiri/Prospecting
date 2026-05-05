@@ -81,7 +81,7 @@ def smote_cv_comparison(
     # ── guard rails ──────────────────────────────────────────────────────────
     if len(X) < n_splits + 5:
         return {"error": f"Too few samples for {n_splits}-fold CV "
-                         f"(need ≥ {n_splits + 5}, have {len(X)})."
+                         f"(need ≥ {n_splits + 5}, have {len(X)})."}
     if y.nunique() < 2:
         return {"error": "Target has only one class — need both replied (1) "
                          "and not replied (0) to compare models."}
@@ -93,7 +93,7 @@ def smote_cv_comparison(
  
     # ── try importing imbalanced-learn ────────────────────────────────────────
     try:
-        from imblearn.over_sampling import SMOTE
+        from imblearn.over_sampling import SMOTE  # pylint: disable=import-error
     except ImportError:
         return {"error": "imbalanced-learn is not installed. "
                          "Run: pip install imbalanced-learn"}
