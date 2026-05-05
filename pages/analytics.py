@@ -437,11 +437,10 @@ if st.session_state.smote_run and st.session_state.smote_cv_data:
         st.subheader("Impact of SMOTE (Δ vs baseline)")
 
         rows = []
-        icons = {"accuracy": "🎯", "precision": "🔍", "recall": "📣", "f1": "⚖️"}
         for metric, vals in cmp.items():
             delta = vals["delta"]
             rows.append({
-                "Metric":           f"{icons.get(metric, '')} {metric.capitalize()}",
+                "Metric":           f"{metric.capitalize()}",
                 "Without SMOTE":    f"{vals['without']:.1f}%",
                 "With SMOTE":       f"{vals['with']:.1f}%",
                 "Δ Change":         f"{'▲' if delta > 0 else '▼' if delta < 0 else '='} {abs(delta):.1f}%",
