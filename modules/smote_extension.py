@@ -81,7 +81,7 @@ def smote_cv_comparison(
     # ── guard rails ──────────────────────────────────────────────────────────
     if len(X) < n_splits + 5:
         return {"error": f"Too few samples for {n_splits}-fold CV "
-                         f"(need ≥ {n_splits + 5}, have {len(X)})."}
+                         f"(need ≥ {n_splits + 5}, have {len(X)})."
     if y.nunique() < 2:
         return {"error": "Target has only one class — need both replied (1) "
                          "and not replied (0) to compare models."}
@@ -272,4 +272,6 @@ def smote_full_model(
         "n_train":              len(X_train),
         "n_test":               len(X_test),
     }
- 
+
+# Re-export prepare_tree_data from analytics_redesigned for convenience
+from modules.analytics_redesigned import prepare_tree_data
