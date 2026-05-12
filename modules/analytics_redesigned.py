@@ -4,7 +4,7 @@ from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score, cross_val_predict 
 from sklearn.metrics import classification_report, confusion_matrix, precision_recall_fscore_support
 import warnings
 warnings.filterwarnings("ignore")
@@ -398,7 +398,8 @@ def model_summary(df: pd.DataFrame, segment: str = None, target: str = "Replied"
     rules = extract_decision_rules(pipeline, X.columns.tolist(), max_depth=3)
     
     # Predictions for confusion matrix
-    y_pred = pipeline.predict(X)
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    y_pred = cross_val_predict(pipeline, X, y, cv=skf)
     tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
     
     precision = round(tp / (tp + fp), 3) if (tp + fp) > 0 else 0
