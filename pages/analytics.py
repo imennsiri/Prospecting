@@ -22,7 +22,7 @@ from modules.smote_extension import (
 st.title("Prospecting Analytics Dashboard")
 st.markdown(
     "Data-driven insights into prospecting performance: funnel analysis, "
-    "segment breakdowns, decision-tree modeling, and SMOTE imbalance comparison."
+    "segment breakdowns, and decision-tree modeling"
 )
 
 # Session state initialisation
