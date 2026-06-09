@@ -325,210 +325,210 @@ if st.session_state.model_trained and st.session_state.model_data:
 # SECTION 5  SMOTE — CLASS IMBALANCE COMPARISON
 # ══════════════════════════════════════════════════════════════════════════════
 
-st.header("Class Imbalance: SMOTE Comparison")
+#st.header("Class Imbalance: SMOTE Comparison")
 
-st.markdown(
-    """
-    Prospecting datasets are **heavily imbalanced** — far more non-replies (0) than
-    replies (1). This can bias a Decision Tree toward always predicting "no reply."
+#st.markdown(
+#    """
+ #   Prospecting datasets are **heavily imbalanced** — far more non-replies (0) than
+  #  replies (1). This can bias a Decision Tree toward always predicting "no reply."
 
-    **SMOTE** (Synthetic Minority Over-sampling Technique) generates synthetic positive
-    examples by interpolating between existing minority samples, giving the model a
-    more balanced view of both classes.
+   # **SMOTE** (Synthetic Minority Over-sampling Technique) generates synthetic positive
+    #examples by interpolating between existing minority samples, giving the model a
+    #more balanced view of both classes.
 
-    > **Important:** SMOTE is applied **only on the training fold** inside each
-    > cross-validation split. The test set is never touched — this prevents data
-    > leakage and ensures honest evaluation.
-    """
-)
+    #> **Important:** SMOTE is applied **only on the training fold** inside each
+    #> cross-validation split. The test set is never touched — this prevents data
+    #> leakage and ensures honest evaluation.
+#    """
+#)
 
 # ── controls ──────────────────────────────────────────────────────────────────
-smote_col1, smote_col2, smote_col3 = st.columns(3)
-
-with smote_col1:
-    smote_segment = st.selectbox(
-        "Segment:",
-        ["All Data", "Client", "Partner"],
-        key="smote_segment",
-    )
-with smote_col2:
-    smote_target = st.selectbox(
-        "Predict:",
-        ["Replied", "Meeting", "Converted"],
-        key="smote_target",
-    )
-with smote_col3:
-    smote_folds = st.selectbox(
-        "CV folds:",
-        [5, 10],
-        index=0,
-        key="smote_folds",
-        help="5-fold is recommended for small datasets (< 100 records)",
-    )
-
-if st.button("Run SMOTE Comparison", use_container_width=True, type="primary"):
-    seg_param = None if smote_segment == "All Data" else smote_segment
-    X, y = prepare_tree_data(df, segment=seg_param, target=smote_target)
-
-    if X is None:
-        st.error("Not enough data for the selected segment/target.")
-    else:
-        with st.spinner("Training models with and without SMOTE across folds…"):
-            result = smote_cv_comparison(X, y, n_splits=int(smote_folds))
-
-        if "error" in result:
-            st.error(result["error"])
-        else:
-            st.session_state.smote_cv_data = result
-            st.session_state.smote_run = True
-
+# smote_col1, smote_col2, smote_col3 = st.columns(3)
+#
+# with smote_col1:
+#     smote_segment = st.selectbox(
+#         "Segment:",
+#         ["All Data", "Client", "Partner"],
+#         key="smote_segment",
+#     )
+# with smote_col2:
+#     smote_target = st.selectbox(
+#         "Predict:",
+#         ["Replied", "Meeting", "Converted"],
+#         key="smote_target",
+#     )
+# with smote_col3:
+#     smote_folds = st.selectbox(
+#         "CV folds:",
+#         [5, 10],
+#         index=0,
+#         key="smote_folds",
+#         help="5-fold is recommended for small datasets (< 100 records)",
+#     )
+#
+# if st.button("Run SMOTE Comparison", use_container_width=True, type="primary"):
+#     seg_param = None if smote_segment == "All Data" else smote_segment
+#     X, y = prepare_tree_data(df, segment=seg_param, target=smote_target)
+#
+#     if X is None:
+#         st.error("Not enough data for the selected segment/target.")
+#     else:
+#         with st.spinner("Training models with and without SMOTE across folds…"):
+#             result = smote_cv_comparison(X, y, n_splits=int(smote_folds))
+#
+#         if "error" in result:
+#             st.error(result["error"])
+#         else:
+#             st.session_state.smote_cv_data = result
+#             st.session_state.smote_run = True
+#
 # ── results display ───────────────────────────────────────────────────────────
-if st.session_state.smote_run and st.session_state.smote_cv_data:
-    res = st.session_state.smote_cv_data
-
-    if "error" in res:
-        st.error(res["error"])
-    else:
-        wo = res["without_smote"]
-        wi = res["with_smote"]
-        cmp = res["comparison"]
-
-        # context banner
-        st.info(
-            f"**Dataset:** {res['n_samples']} prospects | "
-            f"**Positive rate:** {res['positive_rate']}% | "
-            f"**CV folds used:** {wo.get('n_folds_used', res['n_splits'])}"
-        )
-
-        # ── side-by-side metric panels ────────────────────────────────────
-        st.subheader("Side-by-Side Comparison")
-
-        left, right = st.columns(2)
-
-        def _render_panel(col, label: str, data: dict, highlight_recall: bool = True):
-            col.markdown(f"### {label}")
-            metrics_map = [
-                ("Accuracy",  "accuracy_mean",  "accuracy_std"),
-                ("Precision", "precision_mean", "precision_std"),
-                ("Recall ⭐", "recall_mean",    "recall_std"),
-                ("F1 Score",  "f1_mean",        "f1_std"),
-            ]
-            for display, mean_key, std_key in metrics_map:
-                mean_val = data.get(mean_key, 0)
-                std_val  = data.get(std_key, 0)
-                col.metric(
-                    label=display,
-                    value=f"{mean_val:.1f}%",
-                    delta=f"±{std_val:.1f}% std",
-                    delta_color="off",
-                )
-            col.markdown("**Confusion matrix (pooled folds)**")
-            col.markdown(
-                f"TP `{data.get('tp', 0)}` · FP `{data.get('fp', 0)}` · "
-                f"FN `{data.get('fn', 0)}` · TN `{data.get('tn', 0)}`"
-            )
-
-        with left:
-            _render_panel(left, "Model WITHOUT SMOTE", wo)
-        with right:
-            _render_panel(right, "Model WITH SMOTE", wi)
-
-        # ── delta summary table ───────────────────────────────────────────
-        st.subheader("Impact of SMOTE (Δ vs baseline)")
-
-        rows = []
-        for metric, vals in cmp.items():
-            delta = vals["delta"]
-            rows.append({
-                "Metric":           f"{metric.capitalize()}",
-                "Without SMOTE":    f"{vals['without']:.1f}%",
-                "With SMOTE":       f"{vals['with']:.1f}%",
-                "Δ Change":         f"{'▲' if delta > 0 else '▼' if delta < 0 else '='} {abs(delta):.1f}%",
-                "Interpretation":   "Improved ✅" if delta > 0 else
-                                    ("Declined ⚠️" if delta < 0 else "No change —"),
-            })
-
-        delta_df = pd.DataFrame(rows)
-        st.dataframe(delta_df, use_container_width=True, hide_index=True)
-
-        # ── visual: grouped bar chart ─────────────────────────────────────
-        chart_df = pd.DataFrame({
-            "Metric":  ["Accuracy", "Precision", "Recall", "F1"],
-            "Without SMOTE": [
-                wo.get("accuracy_mean",  0), wo.get("precision_mean", 0),
-                wo.get("recall_mean",    0), wo.get("f1_mean",        0),
-            ],
-            "With SMOTE": [
-                wi.get("accuracy_mean",  0), wi.get("precision_mean", 0),
-                wi.get("recall_mean",    0), wi.get("f1_mean",        0),
-            ],
-        }).melt(id_vars="Metric", var_name="Model", value_name="Score (%)")
-
-        fig_cmp = px.bar(
-            chart_df,
-            x="Metric", y="Score (%)", color="Model",
-            barmode="group",
-            title="Decision Tree Performance: With vs Without SMOTE",
-            color_discrete_sequence=["#5B8DB8", "#F4A261"],
-            text_auto=".1f",
-        )
-        fig_cmp.update_traces(textposition="outside")
-        fig_cmp.update_layout(height=420, legend_title_text="")
-        st.plotly_chart(fig_cmp, use_container_width=True)
-
-        # ── recall callout (most important for prospecting) ───────────────
-        recall_cmp = cmp.get("recall", {})
-        recall_delta = recall_cmp.get("delta", 0)
-
-        st.subheader("Recall: Why It Matters Most for Prospecting")
-        if recall_delta > 0:
-            st.success(
-                f"**SMOTE improved Recall by {recall_delta:.1f} percentage points** "
-                f"({recall_cmp['without']:.1f}% → {recall_cmp['with']:.1f}%). "
-                "This means the model identifies more true replies — fewer high-intent "
-                "prospects slip through undetected."
-            )
-        elif recall_delta < 0:
-            st.warning(
-                f"**SMOTE reduced Recall by {abs(recall_delta):.1f} percentage points** "
-                f"({recall_cmp['without']:.1f}% → {recall_cmp['with']:.1f}%). "
-                "With very few positive examples, synthetic samples may not capture "
-                "real behavioral patterns — see limitations below."
-            )
-        else:
-            st.info(
-                "SMOTE did not meaningfully change Recall. "
-                "This is common with very small minority classes "
-                f"(positive rate: {res['positive_rate']}%)."
-            )
-
-        # ── honest limitations box ────────────────────────────────────────
-        with st.expander("⚠️ Limitations of SMOTE on this dataset"):
-            st.markdown(
-                f"""
-                **Sample size:** {res['n_samples']} total observations with
-                {res['positive_rate']}% positive rate
-                (~{round(res['n_samples'] * res['positive_rate'] / 100)} replies).
-
-                **Synthetic ≠ real:** SMOTE interpolates between existing minority
-                samples. With very few real replies, synthetic samples are close
-                neighbours of the same few points — they introduce little new
-                information about true reply behaviour.
-
-                **Per-fold minority count:** With {res['n_splits']}-fold CV,
-                each training fold contains roughly
-                {round(res['n_samples'] * res['positive_rate'] / 100 * (1 - 1/res['n_splits']))}
-                positive examples. Below ~5, SMOTE is limited to
-                `k_neighbors = minority_count − 1`, further constraining diversity.
-
-                **Interpretation:** These results are **exploratory** and should
-                not be used as definitive performance estimates. Collect more
-                labelled data (target: ≥ 30 positive outcomes) before deploying
-                a scored prospecting model in production.
-                """
-            )
-
-
+# if st.session_state.smote_run and st.session_state.smote_cv_data:
+#     res = st.session_state.smote_cv_data
+#
+#     if "error" in res:
+#         st.error(res["error"])
+#     else:
+#         wo = res["without_smote"]
+#         wi = res["with_smote"]
+#         cmp = res["comparison"]
+#
+#         # context banner
+#         st.info(
+#             f"**Dataset:** {res['n_samples']} prospects | "
+#             f"**Positive rate:** {res['positive_rate']}% | "
+#             f"**CV folds used:** {wo.get('n_folds_used', res['n_splits'])}"
+#         )
+#
+#         # ── side-by-side metric panels ────────────────────────────────────
+#         st.subheader("Side-by-Side Comparison")
+#
+#         left, right = st.columns(2)
+#
+#         def _render_panel(col, label: str, data: dict, highlight_recall: bool = True):
+#             col.markdown(f"### {label}")
+#             metrics_map = [
+#                 ("Accuracy",  "accuracy_mean",  "accuracy_std"),
+#                 ("Precision", "precision_mean", "precision_std"),
+#                 ("Recall ⭐", "recall_mean",    "recall_std"),
+#                 ("F1 Score",  "f1_mean",        "f1_std"),
+#             ]
+#             for display, mean_key, std_key in metrics_map:
+#                 mean_val = data.get(mean_key, 0)
+#                 std_val  = data.get(std_key, 0)
+#                 col.metric(
+#                     label=display,
+#                     value=f"{mean_val:.1f}%",
+#                     delta=f"±{std_val:.1f}% std",
+#                     delta_color="off",
+#                 )
+#             col.markdown("**Confusion matrix (pooled folds)**")
+#             col.markdown(
+#                 f"TP `{data.get('tp', 0)}` · FP `{data.get('fp', 0)}` · "
+#                 f"FN `{data.get('fn', 0)}` · TN `{data.get('tn', 0)}`"
+#             )
+#
+#         with left:
+#             _render_panel(left, "Model WITHOUT SMOTE", wo)
+#         with right:
+#             _render_panel(right, "Model WITH SMOTE", wi)
+#
+#         # ── delta summary table ───────────────────────────────────────────
+#         st.subheader("Impact of SMOTE (Δ vs baseline)")
+#
+#         rows = []
+#         for metric, vals in cmp.items():
+#             delta = vals["delta"]
+#             rows.append({
+#                 "Metric":           f"{metric.capitalize()}",
+#                 "Without SMOTE":    f"{vals['without']:.1f}%",
+#                 "With SMOTE":       f"{vals['with']:.1f}%",
+#                 "Δ Change":         f"{'▲' if delta > 0 else '▼' if delta < 0 else '='} {abs(delta):.1f}%",
+#                 "Interpretation":   "Improved ✅" if delta > 0 else
+#                                     ("Declined ⚠️" if delta < 0 else "No change —"),
+#             })
+#
+#         delta_df = pd.DataFrame(rows)
+#         st.dataframe(delta_df, use_container_width=True, hide_index=True)
+#
+#         # ── visual: grouped bar chart ─────────────────────────────────────
+#         chart_df = pd.DataFrame({
+#             "Metric":  ["Accuracy", "Precision", "Recall", "F1"],
+#             "Without SMOTE": [
+#                 wo.get("accuracy_mean",  0), wo.get("precision_mean", 0),
+#                 wo.get("recall_mean",    0), wo.get("f1_mean",        0),
+#             ],
+#             "With SMOTE": [
+#                 wi.get("accuracy_mean",  0), wi.get("precision_mean", 0),
+#                 wi.get("recall_mean",    0), wi.get("f1_mean",        0),
+#             ],
+#         }).melt(id_vars="Metric", var_name="Model", value_name="Score (%)")
+#
+#         fig_cmp = px.bar(
+#             chart_df,
+#             x="Metric", y="Score (%)", color="Model",
+#             barmode="group",
+#             title="Decision Tree Performance: With vs Without SMOTE",
+#             color_discrete_sequence=["#5B8DB8", "#F4A261"],
+#             text_auto=".1f",
+#         )
+#         fig_cmp.update_traces(textposition="outside")
+#         fig_cmp.update_layout(height=420, legend_title_text="")
+#         st.plotly_chart(fig_cmp, use_container_width=True)
+#
+#         # ── recall callout (most important for prospecting) ───────────────
+#         recall_cmp = cmp.get("recall", {})
+#         recall_delta = recall_cmp.get("delta", 0)
+#
+#         st.subheader("Recall: Why It Matters Most for Prospecting")
+#         if recall_delta > 0:
+#             st.success(
+#                 f"**SMOTE improved Recall by {recall_delta:.1f} percentage points** "
+#                 f"({recall_cmp['without']:.1f}% → {recall_cmp['with']:.1f}%). "
+#                 "This means the model identifies more true replies — fewer high-intent "
+#                 "prospects slip through undetected."
+#             )
+#         elif recall_delta < 0:
+#             st.warning(
+#                 f"**SMOTE reduced Recall by {abs(recall_delta):.1f} percentage points** "
+#                 f"({recall_cmp['without']:.1f}% → {recall_cmp['with']:.1f}%). "
+#                 "With very few positive examples, synthetic samples may not capture "
+#                 "real behavioral patterns — see limitations below."
+#             )
+#         else:
+#             st.info(
+#                 "SMOTE did not meaningfully change Recall. "
+#                 "This is common with very small minority classes "
+#                 f"(positive rate: {res['positive_rate']}%)."
+#             )
+#
+#         # ── honest limitations box ────────────────────────────────────────
+#         with st.expander("⚠️ Limitations of SMOTE on this dataset"):
+#             st.markdown(
+#                 f"""
+#                 **Sample size:** {res['n_samples']} total observations with
+#                 {res['positive_rate']}% positive rate
+#                 (~{round(res['n_samples'] * res['positive_rate'] / 100)} replies).
+#
+#                 **Synthetic ≠ real:** SMOTE interpolates between existing minority
+#                 samples. With very few real replies, synthetic samples are close
+#                 neighbours of the same few points — they introduce little new
+#                 information about true reply behaviour.
+#
+#                 **Per-fold minority count:** With {res['n_splits']}-fold CV,
+#                 each training fold contains roughly
+#                 {round(res['n_samples'] * res['positive_rate'] / 100 * (1 - 1/res['n_splits']))}
+#                 positive examples. Below ~5, SMOTE is limited to
+#                 `k_neighbors = minority_count − 1`, further constraining diversity.
+#
+#                 **Interpretation:** These results are **exploratory** and should
+#                 not be used as definitive performance estimates. Collect more
+#                 labelled data (target: ≥ 30 positive outcomes) before deploying
+#                 a scored prospecting model in production.
+#                 """
+#             )
+#
+#
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 6  TEMPORAL ANALYSIS
 # ══════════════════════════════════════════════════════════════════════════════
